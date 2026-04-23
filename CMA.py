@@ -15,35 +15,34 @@ def linkingCMA(term):
     PREFIX naming: <https://w3id.org/hacid/onto/core/naming/>
 
     SELECT DISTINCT ?snomedId
-WHERE {
-  {
+    WHERE {
+    {
     SELECT DISTINCT ?concept (STR(?name) as ?name)
     WHERE {
-    
-      ?concept naming:hasNaming/naming:hasName ?theName .
-      ?theName ?property ?name .
-      ?name bif:contains "'%s'" .
-FILTER (?property IN (<https://w3id.org/hacid/onto/meta-inventory/normForm> , naming:lexicalItem))
-
+    ?concept naming:hasNaming/naming:hasName ?theName .
+    ?theName ?property ?name .
+    ?name bif:contains "'%s'" .
+    FILTER (?property IN (<https://w3id.org/hacid/onto/meta-inventory/normForm> , naming:lexicalItem))
     }
-  }
-  FILTER(LCASE(STR(?name)) = '%s') .
-  BIND(REPLACE(STR(?concept), "https://w3id.org/hacid/mdx/data/", "") as ?snomedId) .
-}
+    }
+    FILTER(LCASE(STR(?name)) = '%s') .
+    FILTER(REGEX(STR(?concept), "^https://w3id.org/hacid/mdx/data/(\\d+)$"))
+    BIND(REPLACE(STR(?concept), "^.*/(\\d+)$", "$1") AS ?snomedId) .
+    }
     """%(variable[0], variable[1])
     )
-    
+
     try:
         ret = sparql.queryAndConvert()
 
         for r in ret["results"]["bindings"]:
-            
+
             return r['snomedId']['value']
     except Exception as e:
         #print(e)
         return None
-    
- #Normalizer   
+
+# Normalizer
 def normCMA (term):
     url = 'http://localhost:6666/normalizer/normalize?keepOrder=true'
     datas = {"text":term}
